@@ -1,6 +1,8 @@
+from streamlit_cookies_manager import EncryptedCookieManager
 import streamlit as st
 import pandas as pd
 from datetime import datetime, date
+import os
 from utils import (
     calculate_projected_miles,
     calculate_actual_miles,
@@ -8,21 +10,38 @@ from utils import (
     calculate_miles_difference
 )
 
-def initialize_session_state():
-    if 'miles_per_year' not in st.session_state:
-        st.session_state.miles_per_year = 12000
-    if 'start_date' not in st.session_state:
+# Initialize cookies
+cookies = EncryptedCookieManager(
+    prefix="milagetracker_",
+    password="my-secret-key-123"  # Optional: update with env var or config for security
+)
+
+if not cookies.ready():
+    st.stop()
+
+def save_config():
+    cookies["miles_per_year"] = st.session_state.miles_per_year
+    cookies["start_miles"] = st.session_state.start_miles
+    cookies["start_date"] = st.session_state.start_date.isoformat()
+    cookies.save()
+
+def load_config():
+    st.session_state.miles_per_year = int(cookies.get("miles_per_year") or 12000)
+    st.session_state.start_miles = int(cookies.get("start_miles") or 0)
+    try:
+        st.session_state.start_date = date.fromisoformat(cookies.get("start_date") or str(date.today()))
+    except:
         st.session_state.start_date = date.today()
-    if 'start_miles' not in st.session_state:
-        st.session_state.start_miles = 0
-    if 'current_miles' not in st.session_state:
-        st.session_state.current_miles = 0
-    if 'show_configuration' not in st.session_state:
+
+def initialize_session_state():
+    if 'initialized' not in st.session_state:
+        load_config()
+        st.session_state.current_miles = st.session_state.start_miles
         st.session_state.show_configuration = True
+        st.session_state.initialized = True
 
 def configuration_screen():
     st.header("🚘 Lease Configuration")
-
     st.markdown("Use this form to set your lease details.")
 
     with st.form("configuration_form"):
@@ -42,7 +61,7 @@ def configuration_screen():
         )
 
         start_miles = st.number_input(
-            "🛞 Starting odometer",
+            "🚾 Starting odometer",
             min_value=0,
             value=int(st.session_state.start_miles),
             step=1,
@@ -53,6 +72,7 @@ def configuration_screen():
             st.session_state.miles_per_year = miles_per_year
             st.session_state.start_date = start_date
             st.session_state.start_miles = start_miles
+            save_config()
             st.session_state.show_configuration = False
             st.success("Configuration saved!")
             st.rerun()
@@ -63,7 +83,7 @@ def main_screen():
     current_miles = st.number_input(
         "📍 Current odometer reading",
         min_value=st.session_state.start_miles,
-        value=max(st.session_state.current_miles, st.session_state.start_miles),
+        value=max(st.session_state.get("current_miles", st.session_state.start_miles), st.session_state.start_miles),
         step=1,
         format="%d"
     )
@@ -81,8 +101,7 @@ def main_screen():
         st.metric("Actual Miles", f"{int(actual):,}")
     with col2:
         st.metric("Avg. Daily Miles", f"{int(avg_daily):,}")
-        st.metric("Miles Over/Under", f"{int(delta):,}",
-                  delta=f"{delta:+,}", delta_color="inverse")
+        st.metric("Miles Over/Under", f"{int(delta):,}", delta=f"{delta:+,}", delta_color="inverse")
 
     if st.button("⚙️ Edit Configuration"):
         st.session_state.show_configuration = True
