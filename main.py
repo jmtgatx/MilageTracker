@@ -2,7 +2,7 @@ import streamlit as st
 st.set_page_config(
     page_title="Lease Mileage Tracker",
     page_icon="🚗",
-    layout="wide"
+    layout="wide")
 
 from streamlit_cookies_manager import EncryptedCookieManager
 import pandas as pd
