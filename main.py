@@ -28,10 +28,11 @@ if not cookies.ready():
     st.stop()
 
 def save_config():
-    cookies["miles_per_year"] = st.session_state.miles_per_year
-    cookies["start_miles"] = st.session_state.start_miles
+    cookies["miles_per_year"] = str(st.session_state.miles_per_year)
+    cookies["start_miles"] = str(st.session_state.start_miles)
     cookies["start_date"] = st.session_state.start_date.isoformat()
     cookies.save()
+
 
 def load_config():
     st.session_state.miles_per_year = int(cookies.get("miles_per_year") or 12000)
