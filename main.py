@@ -33,7 +33,6 @@ def save_config():
     cookies["start_date"] = st.session_state.start_date.isoformat()
     cookies.save()
 
-
 def load_config():
     st.session_state.miles_per_year = int(cookies.get("miles_per_year") or 12000)
     st.session_state.start_miles = int(cookies.get("start_miles") or 0)
@@ -46,7 +45,11 @@ def initialize_session_state():
     if 'initialized' not in st.session_state:
         load_config()
         st.session_state.current_miles = st.session_state.start_miles
-        st.session_state.show_configuration = True
+        # Automatically skip config screen if cookies are set
+        if cookies.get("miles_per_year") and cookies.get("start_date") and cookies.get("start_miles"):
+            st.session_state.show_configuration = False
+        else:
+            st.session_state.show_configuration = True
         st.session_state.initialized = True
 
 def configuration_screen():
@@ -65,12 +68,11 @@ def configuration_screen():
         start_date = st.date_input(
             "📆 Lease start date",
             value=st.session_state.start_date,
-            max_value=date.today(),
-            format="MM/DD/YYYY"
+            max_value=date.today()
         )
 
         start_miles = st.number_input(
-            "🛞 Starting odometer",
+            "🚾 Starting odometer",
             min_value=0,
             value=int(st.session_state.start_miles),
             step=1,
