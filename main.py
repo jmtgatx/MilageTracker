@@ -1,12 +1,15 @@
 import streamlit as st
+
+# ✅ This must be the very first Streamlit command
 st.set_page_config(
     page_title="Lease Mileage Tracker",
     page_icon="🚗",
-    layout="wide")
+    layout="wide"
+)
 
 from streamlit_cookies_manager import EncryptedCookieManager
 import pandas as pd
-from datetime import datetime, date
+from datetime import date
 import os
 from utils import (
     calculate_projected_miles,
@@ -15,10 +18,10 @@ from utils import (
     calculate_miles_difference
 )
 
-# Initialize cookies
+# Cookie manager setup
 cookies = EncryptedCookieManager(
     prefix="milagetracker_",
-    password="my-secret-key-123"  # Optional: update with env var or config for security
+    password="my-secret-key-123"
 )
 
 if not cookies.ready():
@@ -66,7 +69,7 @@ def configuration_screen():
         )
 
         start_miles = st.number_input(
-            "🚾 Starting odometer",
+            "🛞 Starting odometer",
             min_value=0,
             value=int(st.session_state.start_miles),
             step=1,
@@ -113,12 +116,6 @@ def main_screen():
         st.rerun()
 
 def main():
-    st.set_page_config(
-        page_title="Lease Mileage Tracker",
-        page_icon="🚗",
-        layout="wide"
-    )
-
     st.title("🚗 Lease Mileage Tracker")
     st.markdown("_Track your lease mileage and stay within contract limits._")
 
